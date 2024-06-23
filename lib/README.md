@@ -1,4 +1,4 @@
-# WELCOME TO MINESWEEPER
+# Welcome to Minesweeper
 Hello everyone, I am Aryan Bodhe, a B.Tech student at Indian Institute of Technology Hyderabad, India. This project was created by me for practicing my concepts in DSA and well as for fun. The whole Program runs in terminal and currently it is the only way to interact with it. Hope you enjoy minesweeping!
 
 ## Features
