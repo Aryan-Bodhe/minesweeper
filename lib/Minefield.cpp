@@ -1,15 +1,18 @@
 #include <time.h>
 #include <vector>
 #include <random>
+#include <tuple>
 #include "util\TextMessages.cpp"
+#include "enums/MineFieldOptions.cpp"
+#include "enums/MaskOptions.cpp"
 using namespace std;
 
 class Minefield
 {
-    public:
+public:
     vector<vector<int>> minefield;
-    vector<pair<int,int>> mineLocations;
-    vector<vector<bool>> maskMatrix;
+    vector<pair<int, int>> mineLocations;
+    vector<vector<maskOptions>> maskMatrix;
 
     Minefield(const int size, const int mineCount) // constructs the minefield
     {
@@ -63,7 +66,7 @@ class Minefield
 
             for (int j = 0; j < size; j++)
             {
-                if (maskMatrix[i][j] == false)
+                if (maskMatrix[i][j] == unmasked)
                 {
                     if (minefield[i][j] == 0)
                     {
@@ -74,9 +77,13 @@ class Minefield
                         cout << minefield[i][j] << " | ";
                     }
                 }
-                else
+                else if(maskMatrix[i][j] == flagged) 
                 {
-                    cout << (char)254 << " | ";
+                    cout << "\033[36;40m\u25B6\033[32;40m" << " | ";
+                }
+                else
+                { //print block
+                    cout << "\u25FC" << " | ";
                 }
             }
             cout << " " << i;
@@ -96,7 +103,7 @@ class Minefield
              << endl;
         return;
     }
-
+    
     void printMinefieldWithBombs()
     {
         cout << endl;
@@ -121,11 +128,11 @@ class Minefield
                 cout << i << " | ";
             for (int j = 0; j < size; j++)
             {
-                if (minefield[i][j] == -1)
+                if (minefield[i][j] == bomb)
                 {
-                    cout << "\033[31;40m*\033[32;40m" << " | ";
+                    cout << "\033[31;40m\u26EF\033[32;40m" << " | ";
                 }
-                else if (maskMatrix[i][j] == 0)
+                else if (maskMatrix[i][j] == unmasked)
                 {
                     if (minefield[i][j] == 0)
                     {
@@ -136,9 +143,13 @@ class Minefield
                         cout << minefield[i][j] << " | ";
                     }
                 }
-                else if (maskMatrix[i][j] == 1)
+                else if (maskMatrix[i][j] == masked)
                 {
-                    cout << (char)254 << " | ";
+                    cout << "\u25FC" << " | ";
+                }
+                else if(maskMatrix[i][j] == flagged) 
+                {
+                    cout << "\033[34;40m\u25B6\033[32;40m" << " | ";
                 }
             }
             cout << " " << i;
@@ -158,34 +169,38 @@ class Minefield
         return;
     }
 
-    int popTiles(pair<int,int> &coordinates) // returns exit code
+    int popTiles(tuple<int, int, char> &coordinates) // returns exit code
     {
-        if (minefield[coordinates.first][coordinates.second] == -1) // if its bomb, terminate game
+        if (minefield[get<0>(coordinates)][get<1>(coordinates)] == bomb) // if its bomb, terminate game
         {
             return -1;
         }
-        else if (minefield[coordinates.first][coordinates.second] == 0) // if its zero, pop all zero tiles
+        else if (minefield[get<0>(coordinates)][get<1>(coordinates)] == 0) // if its zero, pop all zero tiles
         {
-            popZeroTiles(coordinates.first, coordinates.second);
+            popZeroTiles(get<0>(coordinates), get<1>(coordinates));
+            return 1;
         }
         else
         {
-            unmaskTile(coordinates.first, coordinates.second); // unmask that tile
+            unmaskTile(get<0>(coordinates), get<1>(coordinates)); // unmask that tile
+            return 1;
         }
         return 0;
     }
 
-    pair<int, int> getCoordinates()
+    tuple<int, int, char> getCoordinates()
     {
-        TextMessages* text = new TextMessages();
-        pair<int, int> coordinates;
+        TextMessages *text = new TextMessages();
+        tuple<int, int, char> coordinates(-1,-1, 'e');
         text->displayCoordinateInputMessage();
         int x, y;
+        char f;
 
     input:
         try
         {
-            cin >> x >> y;
+            cin >> x >> y >> f;
+            f = tolower(f);
         }
         catch (const exception)
         {
@@ -195,10 +210,25 @@ class Minefield
             goto input;
         }
 
-        if (x >= 0 && x < size && y >= 0 && y < size)
+        if (x >= 0 && x < size && y >= 0 && y < size && f == 'p' )
         {
-            coordinates.first = x;
-            coordinates.second = y;
+            get<0>(coordinates) = x;
+            get<1>(coordinates) = y;
+            get<2>(coordinates) = f;
+        }
+        else if (x >= 0 && x < size && y >= 0 && y < size && f == 'f')
+        {
+            if(maskMatrix[x][y] == unmasked) 
+            {
+                text->displayInvalidFlagMessage();
+                goto input;
+            }
+            else
+            {
+                get<0>(coordinates) = x;
+                get<1>(coordinates) = y;
+                get<2>(coordinates) = f;
+            }
         }
         else
         {
@@ -209,20 +239,33 @@ class Minefield
         return coordinates;
     }
 
-    int getSize() 
+    int flagTile(int x, int y)
+    {
+        TextMessages* text = new TextMessages();
+        if(maskMatrix[x][y] == masked)
+        {
+            text->displayInvalidFlagMessage();   
+        }
+            maskMatrix[x][y] = flagged;
+        return 1;
+    }
+
+    int getSize()
     {
         return size;
     }
 
-    int getMineCount() {
+    int getMineCount()
+    {
         return mineCount;
     }
 
-    int getSafeTiles() {
+    int getSafeTiles()
+    {
         return safeTiles;
     }
 
-    private:
+private:
     int size;
     int mineCount;
     int safeTiles;
@@ -310,7 +353,7 @@ class Minefield
         {
             for (int j = 0; j < size; j++)
             {
-                maskMatrix[i].push_back(1);
+                maskMatrix[i].push_back(masked);
             }
         }
     }
@@ -319,7 +362,7 @@ class Minefield
     {
         if (maskMatrix[x][y]) // only unmask if it is currently masked
         {
-            maskMatrix[x][y] = false;
+            maskMatrix[x][y] = unmasked;
             safeTiles--;
         }
         return;
@@ -327,12 +370,12 @@ class Minefield
 
     void popZeroTiles(int x, int y)
     {
-        if (x < 0 || x >= size || y < 0 || y >= size || (safeTiles == 0) || maskMatrix[x][y] == 0)
+        if (x < 0 || x >= size || y < 0 || y >= size || (safeTiles == 0) || maskMatrix[x][y] == unmasked)
         {
             return;
         }
 
-        if (minefield[x][y] != 0 && minefield[x][y] != -1)
+        if (minefield[x][y] != 0 && minefield[x][y] != bomb)
         {
             unmaskTile(x, y);
             return;
@@ -340,10 +383,10 @@ class Minefield
 
         unmaskTile(x, y); // tile is zero, unmask it
 
-        popZeroTiles(x, y + 1); // E
-        popZeroTiles(x + 1, y); // S
-        popZeroTiles(x - 1, y); // N
-        popZeroTiles(x, y - 1); // W
+        popZeroTiles(x, y + 1);     // E
+        popZeroTiles(x + 1, y);     // S
+        popZeroTiles(x - 1, y);     // N
+        popZeroTiles(x, y - 1);     // W
         popZeroTiles(x + 1, y + 1); // SE
         popZeroTiles(x + 1, y - 1); // SW
         popZeroTiles(x - 1, y + 1); // NE
@@ -388,151 +431,31 @@ class Minefield
     //     cout << endl;
     //     return;
     // }
-
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// void numberTheCells(vector<vector<int>>& minefield, vector<pair<int,int>> mineLocation, const int size)
-// {
-//     int i,j;
-    
-//     for(auto mine : mineLocation)
-//     {
-//         i = mine.first, j = mine.second;
-//         if(i-1 >= 0 && i-1 < size && j-1 >=0 && j-1 < size && minefield[i-1][j-1] != -1) //NW
-//         {
-//             minefield[i-1][j-1]++;
-//         }
-//         if(i-1 >= 0 && i-1 < size && j >=0 && j < size && minefield[i-1][j] != -1) //N
-//         {
-//             minefield[i-1][j]++;
-//         }
-//         if(i-1 >= 0 && i-1 < size && j+1 >=0 && j+1 < size && minefield[i-1][j+1] != -1) //NE
-//         {
-//             minefield[i-1][j+1]++;
-//         }
-//         if(i >= 0 && i < size && j-1 >=0 && j-1 < size && minefield[i][j-1] != -1) //W
-//         {
-//             minefield[i][j-1]++;
-//         }
-        
-//         if(i >= 0 && i < size && j+1 >=0 && j+1 < size && minefield[i][j+1] != -1) //E
-//         {
-//             minefield[i][j+1]++;
-//         }
-//         if(i+1 >= 0 && i+1 < size && j-1 >=0 && j-1 < size && minefield[i+1][j-1] != -1) //SW
-//         {
-//             minefield[i+1][j-1]++;
-//         }
-//         if(i+1 >= 0 && i+1 < size && j >=0 && j < size && minefield[i+1][j] != -1) //S
-//         {
-//             minefield[i+1][j]++;
-//         }
-//         if(i+1 >= 0 && i+1 < size && j+1 >=0 && j+1 < size && minefield[i+1][j+1] != -1)
-//         {
-//             minefield[i+1][j+1]++;
-//         }
-//     }
-// }
-
-// vector<pair<int,int>> generateMines(const int size, const int mineCount)
-// {
-//     srand(time(NULL));
-//     vector<pair<int,int>> mineLocation(mineCount);
-//     int r,x,y;
-//     bool isLocationUnique = true;
-
-//     for(int i = 0; i < mineCount; i++)
-//     {
-//         isLocationUnique = true;
-//         r = rand() % size;
-//         x = r;
-//         r = rand() % size;
-//         y = r;
-
-//         for(auto mine : mineLocation)
-//         {
-//             if(mine.first == x && mine.second == y)
-//             {
-//                 isLocationUnique = false;
-//                 break;
-//             }
-//         }
-
-//         if(isLocationUnique)
-//         {
-//             mineLocation[i].first = x;
-//             mineLocation[i].second = y;
-//         }
-//         else
-//         {
-//             i--;
-//         }
-//     }
-
-//     return mineLocation;
-// }
-
-// vector<vector<bool>> generateMaskMatrix(const int size)
-// {
-//     vector<vector<bool>> maskMatrix(size);
-
-//     for(int i = 0; i < size; i++)
-//     {
-//         for(int j = 0; j < size; j++)
-//         {
-//             maskMatrix[i].push_back(1);
-//         }
-//     }
-//     return maskMatrix;
-// }
-
-// vector<vector<int>> newminefield(const int size, const int mineCount)
-// {
-//     vector<vector<int>> minefield(size);
-//     vector<pair<int,int>> mineLocation;
-
-//     for(int i = 0; i < size; i++)
-//     {
-//         for(int j = 0; j < size; j++)
-//         {
-//             minefield[i].push_back(0);
-//         }
-//     }
-
-//     mineLocation = generateMines(size, mineCount);
-
-//     for(auto mine : mineLocation)
-//     {
-//         minefield[mine.first][mine.second] = -1;
-//     }
-
-//     numberTheCells(minefield, mineLocation, size);
-//     vector<vector<bool>> maskMatrix = generateMaskMatrix(size);
-//     //printMaskedminefield(minefield, maskMatrix, size);
-//     //printminefield(minefield, size);
-
-//     return minefield;
-// }
+    // {
+    //     vector<vector<int>> minefield(size);
+    //     vector<pair<int,int>> mineLocation;
+    //
+    //     for(int i = 0; i < size; i++)
+    //     {
+    //         for(int j = 0; j < size; j++)
+    //         {
+    //             minefield[i].push_back(0);
+    //         }
+    //     }
+    //
+    //     mineLocation = generateMines(size, mineCount);
+    //
+    //     for(auto mine : mineLocation)
+    //     {
+    //         minefield[mine.first][mine.second] = -1;
+    //     }
+    //
+    //     numberTheCells(minefield, mineLocation, size);
+    //     vector<vector<bool>> maskMatrix = generateMaskMatrix(size);
+    //     //printMaskedminefield(minefield, maskMatrix, size);
+    //     //printminefield(minefield, size);
+    //
+    //     return minefield;
+    // }

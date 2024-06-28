@@ -4,9 +4,17 @@ using namespace std;
 class TextMessages
 {
     public:
-    void displayCoordinateInputMessage() {
-        cout << "Enter coordinates of tile to pop as space separated values." << endl;
+    void displayCoordinateInputMessage() 
+    {
+        cout << "Enter coordinates of tile to pop as space separated values followed \nby 'p' to pop the cell or 'f' to flag it." << endl;
+        cout << "Example: '2 3 f', '7 2 p', etc." << endl;
     }
+
+    void displayInvalidFlagMessage()
+    {
+        cout << "\033[31;40mTile has been popped already. Cannot flag it. Please input different coordinates.\033[32;40m" << endl;
+    }
+
     void displayWelcomeMessage() 
     {
         cout << "\033[30;42m <---WELCOME TO MINESWEEPER ---> \033[32;40m\n" << endl;
@@ -14,7 +22,7 @@ class TextMessages
     
     void displayInvalidInputMessage() 
     {
-        cout << "Invalid Input. Please try again." << endl;
+        cout << "\033[31;40mInvalid Input. Please try again.\033[32;40m" << endl;
     }
 
     void displayGameLoseMessage()
@@ -44,7 +52,7 @@ class TextMessages
 
     void displayGameDifficultyOptions()
     {
-        cout << "Choose difficulty level." << endl
+        cout << "\033[32;40mChoose difficulty level." << endl
                 << endl;
         cout << "1. Beginner 9x9 grid with 10 mines. (Enter 1)" << endl;
         cout << "2. Intermediate 14x14 with 30 mines. (Enter 2)" << endl;

@@ -1,9 +1,11 @@
 #include "Minefield.cpp"
 #include "util\ClearScreen.cpp"
+#include "enums/DifficultyOptions.cpp"
 using namespace std;
 
 class ProgramRunner
 {
+private:
     Minefield *minefield = NULL;
     TextMessages *text = new TextMessages();
     ScreenActions *screen = new ScreenActions();
@@ -13,10 +15,13 @@ class ProgramRunner
         while (minefield->getSafeTiles() > 0)
         {
             minefield->printMaskedMinefield();
-            pair<int, int> coordinates = minefield->getCoordinates();
-            cout << coordinates.first << " " << coordinates.second << endl;
+            tuple<int, int, char> coordinates = minefield->getCoordinates();
+            int exitCode = 1;
 
-            int exitCode = minefield->popTiles(coordinates);
+            if (get<0>(coordinates) != -1 && get<1>(coordinates) != -1 && get<2>(coordinates) == 'p')
+                exitCode = minefield->popTiles(coordinates);
+            else if ((get<0>(coordinates) != -1 && get<1>(coordinates) != -1 && get<2>(coordinates) == 'f'))
+                exitCode = minefield->flagTile(get<0>(coordinates), get<1>(coordinates));
 
             if (minefield->getSafeTiles() != 0)
                 system("cls");
@@ -63,20 +68,20 @@ public:
             goto chooseDifficulty;
         }
 
-        if (difficulty == 1)
+        if (difficulty == beginner)
         {
             size = 9;
             mines = 10;
         }
-        else if (difficulty == 2)
+        else if (difficulty == intermediate)
         {
             size = 15;
-            mines = 35;
+            mines = 30;
         }
-        else if (difficulty == 3)
+        else if (difficulty == expert)
         {
             size = 20;
-            mines = 80;
+            mines = 60;
         }
         else
         {
@@ -92,7 +97,6 @@ public:
         text->displayNewGameMessage();
         char ch;
 
-    
     // exit point of the program
     input:
         try
