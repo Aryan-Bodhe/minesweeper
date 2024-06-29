@@ -1,6 +1,7 @@
 #include "Minefield.cpp"
 #include "util\ClearScreen.cpp"
 #include "enums/DifficultyOptions.cpp"
+#include "util/Delay.cpp"
 using namespace std;
 
 class ProgramRunner
@@ -122,6 +123,7 @@ public:
         {
             delete minefield;
             text->displayGameTerminateMessage();
+            Delay::delay(3000);
             return 0;
         }
         else
