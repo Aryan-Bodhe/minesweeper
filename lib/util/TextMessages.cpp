@@ -4,10 +4,16 @@ using namespace std;
 class TextMessages
 {
     public:
+    void displayAlreadyPoppedMessage()
+    {
+        cout << "\033[31;40mSelected tile has already been popped. Try again with different coordinates.\033[32;40m" << endl;
+    }
+
     void displayAlreadyFlaggedMessage()
     {
         cout << "\033[31;40mSelected tile is already flagged. Try again with different coordinates.\033[32;40m" << endl;
     }
+
     void displayInvalidFlagRemovalMessage() 
     {
         cout << "\033[31;40mSelected tile is not flagged. Try again with different coordinates.\033[32;40m" << endl;

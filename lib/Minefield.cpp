@@ -212,9 +212,17 @@ public:
 
         if (x >= 0 && x < size && y >= 0 && y < size && mode == 'p' )
         {
-            get<0>(coordinates) = x;
-            get<1>(coordinates) = y;
-            get<2>(coordinates) = mode;
+            if(maskMatrix[x][y] == unmasked)
+            {
+                text->displayAlreadyPoppedMessage();
+                goto input;
+            }
+            else
+            {
+                get<0>(coordinates) = x;
+                get<1>(coordinates) = y;
+                get<2>(coordinates) = mode;
+            }
         }
         else if (x >= 0 && x < size && y >= 0 && y < size && mode == 'f')
         {
