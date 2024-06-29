@@ -4,10 +4,19 @@ using namespace std;
 class TextMessages
 {
     public:
+    void displayAlreadyFlaggedMessage()
+    {
+        cout << "\033[31;40mSelected tile is already flagged. Try again with different coordinates.\033[32;40m" << endl;
+    }
+    void displayInvalidFlagRemovalMessage() 
+    {
+        cout << "\033[31;40mSelected tile is not flagged. Try again with different coordinates.\033[32;40m" << endl;
+    }
+
     void displayCoordinateInputMessage() 
     {
-        cout << "Enter coordinates of tile to pop as space separated values followed \nby 'p' to pop the cell or 'f' to flag it." << endl;
-        cout << "Example: '2 3 f', '7 2 p', etc." << endl;
+        cout << "Enter coordinates of tile to pop as space separated values followed \nby 'p' to pop the cell, 'f' to flag it, or 'r' to remove a flag." << endl;
+        cout << "Example: '2 3 f', '7 2 p', '13 11 r' etc." << endl;
     }
 
     void displayInvalidFlagMessage()
@@ -56,7 +65,7 @@ class TextMessages
                 << endl;
         cout << "1. Beginner 9x9 grid with 10 mines. (Enter 1)" << endl;
         cout << "2. Intermediate 14x14 with 30 mines. (Enter 2)" << endl;
-        cout << "3. Expert 20x20 with 80 mines. (Enter 3)" << endl;
+        cout << "3. Expert 20x20 with 60 mines. (Enter 3)" << endl;
     }
 
     void displayGameRules()

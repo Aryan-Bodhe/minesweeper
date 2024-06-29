@@ -194,13 +194,13 @@ public:
         tuple<int, int, char> coordinates(-1,-1, 'e');
         text->displayCoordinateInputMessage();
         int x, y;
-        char f;
+        char mode;
 
     input:
         try
         {
-            cin >> x >> y >> f;
-            f = tolower(f);
+            cin >> x >> y >> mode;
+            mode = tolower(mode);
         }
         catch (const exception)
         {
@@ -210,24 +210,41 @@ public:
             goto input;
         }
 
-        if (x >= 0 && x < size && y >= 0 && y < size && f == 'p' )
+        if (x >= 0 && x < size && y >= 0 && y < size && mode == 'p' )
         {
             get<0>(coordinates) = x;
             get<1>(coordinates) = y;
-            get<2>(coordinates) = f;
+            get<2>(coordinates) = mode;
         }
-        else if (x >= 0 && x < size && y >= 0 && y < size && f == 'f')
+        else if (x >= 0 && x < size && y >= 0 && y < size && mode == 'f')
         {
             if(maskMatrix[x][y] == unmasked) 
             {
                 text->displayInvalidFlagMessage();
                 goto input;
             }
+            if(maskMatrix[x][y] == flagged)
+            {
+                text->displayAlreadyFlaggedMessage();
+                goto input;
+            }
             else
             {
                 get<0>(coordinates) = x;
                 get<1>(coordinates) = y;
-                get<2>(coordinates) = f;
+                get<2>(coordinates) = mode;
+            }
+        }
+        else if (x >= 0 && x < size && y >= 0 && y < size && mode == 'r') 
+        {
+            if(maskMatrix[x][y] == flagged) 
+            {
+                maskMatrix[x][y] = masked;
+            }
+            else 
+            {
+                text->displayInvalidFlagRemovalMessage();
+                goto input;
             }
         }
         else
